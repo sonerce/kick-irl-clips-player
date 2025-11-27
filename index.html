@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kick.com BRB Klip Oynatıcı</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #53fc18 0%, #45d614 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: #000;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #333;
+            letter-spacing: 0.3px;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1em;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background-color: #f8f9fa;
+            color: #333;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #53fc18;
+            background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(83, 252, 24, 0.1);
+        }
+
+        input[type="text"]::placeholder {
+            color: #aaa;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.05em;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        .url-output {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 12px;
+            border-left: 4px solid #53fc18;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .url-output h3 {
+            margin-bottom: 12px;
+            font-size: 1em;
+            color: #1b5e20;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .url-box {
+            background-color: #fff;
+            color: #1b5e20;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            font-size: 0.9em;
+            border: 1px solid #a5d6a7;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 30px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .info-box h3 {
+            color: #0d47a1;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        .info-box ol {
+            margin-left: 20px;
+            color: #1565c0;
+            line-height: 1.8;
+        }
+
+        .info-box li {
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-size: 0.85em;
+            background-color: #f8f9fa;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Kick Klip Oynatıcı</h1>
+            <p>OBS için BRB ekranı oluştur</p>
+        </div>
+        
+        <div class="content">
+            <div class="form-group">
+                <label for="streamerName">📺 Yayıncı Adı</label>
+                <input type="text" id="streamerName" placeholder="Örn: hype" value="hype">
+            </div>
+
+            <div class="form-group">
+                <label for="timeframe">⏱️ Zaman Aralığı</label>
+                <select id="timeframe">
+                    <option value="day">Son 24 Saat</option>
+                    <option value="week" selected>Son Hafta</option>
+                    <option value="month">Son Ay</option>
+                    <option value="all">Tüm Zamanlar</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" onclick="generateURL()">🚀 URL Oluştur</button>
+
+            <div class="url-output" id="urlOutput" style="display: none;">
+                <h3>✅ URL Hazır!</h3>
+                <p style="color: #2e7d32; margin-bottom: 10px; font-size: 0.9em;">
+                    Bu URL'yi OBS Browser Source olarak ekleyin:
+                </p>
+                <div class="url-box" id="generatedURL"></div>
+                <button class="btn btn-secondary" onclick="copyToClipboard()">📋 Kopyala</button>
+            </div>
+
+            <div class="info-box">
+                <h3>📖 Nasıl Kullanılır?</h3>
+                <ol>
+                    <li>Yayıncı adını girin</li>
+                    <li>Zaman aralığını seçin</li>
+                    <li>"URL Oluştur" butonuna tıklayın</li>
+                    <li>OBS'de yeni <strong>Browser Source</strong> ekleyin</li>
+                    <li>Oluşan URL'yi yapıştırın</li>
+                    <li>Boyut: <strong>1920x1080</strong> yapın</li>
+                </ol>
+            </div>
+
+        </div>
+
+        <div class="footer">
+            Kick.com API kullanılarak yapılmıştır • <a href="https://kick.com" target="_blank">Kick.com</a>
+        </div>
+    </div>
+
+    <script>
+        function generateURL() {
+            const streamer = document.getElementById('streamerName').value.trim();
+            const duration = document.getElementById('timeframe').value;
+            
+            if (!streamer) {
+                alert('❌ Lütfen bir yayıncı adı girin!');
+                return;
+            }
+
+            const baseURL = window.location.origin + window.location.pathname.replace('index.html', '');
+            const fullURL = `${baseURL}clips.html?streamerName=${encodeURIComponent(streamer)}&duration=${duration}`;
+            
+            document.getElementById('generatedURL').textContent = fullURL;
+            document.getElementById('urlOutput').style.display = 'block';
+            
+            // Smooth scroll
+            document.getElementById('urlOutput').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function copyToClipboard() {
+            const urlText = document.getElementById('generatedURL').textContent;
+            navigator.clipboard.writeText(urlText).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Kopyalandı!';
+                btn.style.background = '#53fc18';
+                btn.style.color = '#000';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                    btn.style.color = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Kopyalama hatası:', err);
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = urlText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('✅ URL kopyalandı!');
+                } catch (e) {
+                    alert('❌ Kopyalama başarısız. Lütfen manuel olarak kopyalayın.');
+                }
+                document.body.removeChild(textarea);
+            });
+        }
+
+        // Enter tuşu ile form gönderimi
+        document.getElementById('streamerName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateURL();
+            }
+        });
+    </script>
+</body>
+</html>

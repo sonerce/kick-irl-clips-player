@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kick Clips Player</title>
+    <!-- HLS.js kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #videoPlayer {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-color: #000;
+        }
+
+        .error-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .error-message {
+            background-color: #1a1a1a;
+            padding: 40px;
+            border-radius: 10px;
+            border: 2px solid #ff5252;
+        }
+
+        .error-message h1 {
+            color: #ff5252;
+            margin-bottom: 20px;
+        }
+
+        .error-message p {
+            color: #aaa;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .loading-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            flex-direction: column;
+        }
+
+        .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #53fc18;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.2em;
+            color: #aaa;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="loading-container" id="loadingContainer">
+        <div class="spinner"></div>
+        <div class="loading-text">Klipler yükleniyor...</div>
+    </div>
+    
+    <video id="videoPlayer" style="display: none;" controls autoplay></video>
+
+    <script>
+        let clips = [];
+        let currentClipIndex = 0;
+        let hls = null;
+
+        // URL parametrelerini al
+        const params = new URLSearchParams(window.location.search);
+        const streamerName = params.get('streamerName');
+        const duration = params.get('duration') || 'week';
+
+        if (!streamerName) {
+            showError('Streamer adı belirtilmedi!', 'URL parametrelerini kontrol edin.');
+        } else {
+            loadClips(streamerName, duration);
+        }
+
+        async function loadClips(streamer, duration) {
+            try {
+                const response = await fetch(`https://kick.com/api/v2/channels/${streamer}/clips?time=${duration}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API hatası: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.clips || data.clips.length === 0) {
+                    throw new Error('Bu kanal için klip bulunamadı.');
+                }
+                
+                // Klipleri karıştır
+                clips = shuffleArray(data.clips);
+                currentClipIndex = 0;
+                
+                console.log(`${clips.length} klip yüklendi ve karıştırıldı.`);
+                console.log('İlk klip:', clips[0]);
+                console.log('İlk klibin alanları:', Object.keys(clips[0]));
+                
+                // İlk klibi oynat
+                playClip(currentClipIndex);
+                
+            } catch (error) {
+                console.error('Hata:', error);
+                showError('Klipler yüklenemedi!', error.message);
+            }
+        }
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function playClip(index) {
+            if (clips.length === 0) return;
+            
+            const clip = clips[index];
+            const videoPlayer = document.getElementById('videoPlayer');
+            const loadingContainer = document.getElementById('loadingContainer');
+            
+            console.log(`\n=== Klip ${index + 1}/${clips.length} ===`);
+            console.log('Başlık:', clip.title);
+            console.log('Klip Objesi:', clip);
+            
+            // Video URL'sini bul
+            let videoUrl = findVideoUrl(clip);
+            
+            if (!videoUrl) {
+                console.error('Video URL bulunamadı! Sonraki klibe geçiliyor...');
+                setTimeout(() => nextClip(), 2000);
+                return;
+            }
+            
+            console.log('Kullanılacak Video URL:', videoUrl);
+            
+            // Loading'i gizle, video player'ı göster
+            loadingContainer.style.display = 'none';
+            videoPlayer.style.display = 'block';
+            
+            // HLS kullanarak videoyu oynat
+            loadVideo(videoPlayer, videoUrl);
+            
+            // Video bitince sonraki klibe geç
+            videoPlayer.onended = () => {
+                console.log('Video bitti, sonraki klibe geçiliyor...');
+                setTimeout(() => nextClip(), 500);
+            };
+            
+            // Video hata durumunda
+            videoPlayer.onerror = (e) => {
+                console.error('Video yükleme hatası:', e);
+                console.error('Video player error:', videoPlayer.error);
+                setTimeout(() => nextClip(), 2000);
+            };
+        }
+
+        function findVideoUrl(clip) {
+            // Olası video URL alanlarını kontrol et
+            const possibleFields = [
+                'video_url',
+                'clip_url',
+                'source_url',
+                'playback_url',
+                'url'
+            ];
+            
+            // Direkt alanlarda ara
+            for (const field of possibleFields) {
+                if (clip[field]) {
+                    console.log(`✓ Video URL "${field}" alanında bulundu`);
+                    return clip[field];
+                }
+            }
+            
+            // Nested objelerde ara
+            if (clip.video) {
+                if (clip.video.url) return clip.video.url;
+                if (clip.video.source) return clip.video.source;
+                if (clip.video.playback_url) return clip.video.playback_url;
+            }
+            
+            if (clip.livestream) {
+                if (clip.livestream.playback_url) return clip.livestream.playback_url;
+                if (clip.livestream.source) return clip.livestream.source;
+            }
+            
+            // Thumbnail'dan video URL'i tahmin et (son çare)
+            if (clip.thumbnail_url) {
+                const guessedUrl = clip.thumbnail_url
+                    .replace('/thumbnail.jpg', '/video.mp4')
+                    .replace('/thumbnail.png', '/video.mp4')
+                    .replace('-thumbnail', '');
+                console.log('⚠ Video URL thumbnail\'den tahmin edildi');
+                return guessedUrl;
+            }
+            
+            return null;
+        }
+
+        function loadVideo(videoElement, videoUrl) {
+            // Önceki HLS instance'ı temizle
+            if (hls) {
+                hls.destroy();
+                hls = null;
+            }
+            
+            // URL'nin formatını kontrol et
+            if (videoUrl.includes('.m3u8')) {
+                // HLS stream
+                if (Hls.isSupported()) {
+                    hls = new Hls({
+                        debug: false,
+                        enableWorker: true,
+                        lowLatencyMode: false,
+                        backBufferLength: 90
+                    });
+                    
+                    hls.loadSource(videoUrl);
+                    hls.attachMedia(videoElement);
+                    
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        console.log('HLS manifest yüklendi, video oynatılıyor...');
+                        videoElement.muted = false;
+                        videoElement.volume = 1.0;
+                        videoElement.play().catch(err => {
+                            console.warn('Autoplay hatası:', err);
+                        });
+                    });
+                    
+                    hls.on(Hls.Events.ERROR, function(event, data) {
+                        console.error('HLS Hatası:', data);
+                        if (data.fatal) {
+                            switch(data.type) {
+                                case Hls.ErrorTypes.NETWORK_ERROR:
+                                    console.error('Network hatası, yeniden deneniyor...');
+                                    hls.startLoad();
+                                    break;
+                                case Hls.ErrorTypes.MEDIA_ERROR:
+                                    console.error('Media hatası, kurtarma deneniyor...');
+                                    hls.recoverMediaError();
+                                    break;
+                                default:
+                                    console.error('Fatal hata, sonraki klibe geçiliyor...');
+                                    setTimeout(() => nextClip(), 1000);
+                                    break;
+                            }
+                        }
+                    });
+                } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                    // Safari native HLS desteği
+                    videoElement.src = videoUrl;
+                    videoElement.muted = false;
+                    videoElement.volume = 1.0;
+                    videoElement.play().catch(err => {
+                        console.warn('Autoplay hatası:', err);
+                    });
+                }
+            } else {
+                // Normal MP4 veya diğer format
+                videoElement.src = videoUrl;
+                videoElement.muted = false;
+                videoElement.volume = 1.0;
+                videoElement.load();
+                videoElement.play().catch(err => {
+                    console.warn('Autoplay hatası:', err);
+                });
+            }
+        }
+
+        function nextClip() {
+            if (clips.length === 0) return;
+            
+            // Bir sonraki klibe geç
+            currentClipIndex = (currentClipIndex + 1) % clips.length;
+            
+            // Tüm klipler bittiyse, karıştır ve başa dön
+            if (currentClipIndex === 0) {
+                console.log('\n🔄 Tüm klipler oynatıldı, karıştırılıyor...\n');
+                clips = shuffleArray(clips);
+            }
+            
+            playClip(currentClipIndex);
+        }
+
+        function showError(title, message) {
+            document.body.innerHTML = `
+                <div class="error-container">
+                    <div class="error-message">
+                        <h1>${title}</h1>
+                        <p>${message}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Klavye kısayolları (debug için)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextClip();
+            } else if (e.key === 'r' || e.key === 'R') {
+                clips = shuffleArray(clips);
+                currentClipIndex = 0;
+                playClip(currentClipIndex);
+            } else if (e.key === 'm' || e.key === 'M') {
+                // Mute toggle
+                const video = document.getElementById('videoPlayer');
+                video.muted = !video.muted;
+                console.log('Mute:', video.muted);
+            }
+        });
+
+        // Visibility API
+        document.addEventListener('visibilitychange', () => {
+            const videoPlayer = document.getElementById('videoPlayer');
+            
+            if (document.hidden) {
+                videoPlayer.pause();
+            } else {
+                videoPlayer.play().catch(err => {
+                    console.error('Resume hatası:', err);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

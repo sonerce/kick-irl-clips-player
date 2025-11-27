@@ -1,6 +1,6 @@
-# Kick.com BRB Clips Player
+# Kick.com Clips Player
 
-Kick.com yayıncılarının kliplerini rastgele sırada OBS'de oynatmak için basit bir HTML aracı.
+IRL yayını, mobil yayın vs durumlarda düşük bitrate veya rtmp sunucusunda yaşadığınız problem sırasında oynatabileceğiniz kanal kliplerini çeken araç.
 
 ## 🎬 Özellikler
 

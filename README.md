@@ -116,5 +116,3 @@ MIT License - Özgürce kullanabilir ve değiştirebilirsiniz.
 Bu proje açık kaynaklıdır. İyileştirme önerilerinizi çekinmeden paylaşabilirsiniz.
 
 ---
-
-**İlham kaynağı:** [IRL Tools Kick BRB Clips Player](https://irltools.github.io/KickBRBClipsPlayer/)
